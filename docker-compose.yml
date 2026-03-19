@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  dualsub:
+    build: .
+    container_name: dualsub-app
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      # IMPORTANT: If your frontend is accessed from a different origin than where it is hosted (e.g. not localhost:3001), update ALLOWED_ORIGIN.
+      # Since the frontend is served *by* the backend in the container, origin checks will match the port.
+      - ALLOWED_ORIGIN=http://localhost:3001,http://localhost:5173
+      # Optionally add your DeepL API Key here for better translations:
+      - DEEPL_KEY=your-deepl-api-key-here
+    volumes:
+      # Persist the cache directory so you don't redownload/translate video data on container restarts
+      - dualsub-cache:/app/backend/cache
+
+volumes:
+  dualsub-cache:

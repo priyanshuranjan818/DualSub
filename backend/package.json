@@ -1,0 +1,22 @@
+{
+  "name": "@dualsub/backend",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "test": "echo \"No tests configured yet\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.0",
+    "node-fetch": "^2.7.0",
+    "pino": "^8.16.0",
+    "pino-pretty": "^10.2.0",
+    "uuid": "^9.0.0",
+    "@dualsub/shared": "*"
+  }
+}
