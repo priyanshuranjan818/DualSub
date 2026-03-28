@@ -1,0 +1,97 @@
+.transcript {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-surface);
+}
+
+.transcript--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transcript__empty-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-sm);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+.transcript__empty-icon { font-size: 1.5rem; color: var(--accent-border); }
+
+/* ── List ── */
+.transcript__list {
+  padding: var(--sp-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ── Slice ── */
+.slice {
+  padding: var(--sp-sm) var(--sp-md);
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+  position: relative;
+}
+.slice:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--border);
+}
+.slice:hover .slice__seek { opacity: 1; }
+
+.slice--active {
+  background: var(--bg-active);
+  border-color: var(--accent-border);
+  animation: pulse-glow 2s ease infinite;
+}
+
+/* ── Slice meta ── */
+.slice__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.slice__id {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+.slice--active .slice__id { color: var(--accent); }
+
+.slice__seek {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity var(--t-fast);
+}
+.slice--active .slice__seek { opacity: 1; }
+
+/* ── Slice text ── */
+.slice__source {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.slice--active .slice__source { color: #fff; }
+
+.slice__trans {
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--text-accent2);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.slice--active .slice__trans { color: var(--accent); }

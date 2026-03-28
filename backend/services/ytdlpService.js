@@ -44,13 +44,11 @@ async function fetchSubtitles(videoId) {
       }
 
       // Always check for VTT files — yt-dlp may exit with error code
-      // but still successfully write subtitle files (e.g. 429 on video formats)
       let files = [];
       try { files = fs.readdirSync(videoDir); } catch (e) {}
       const deFile = files.find(f => f.includes('.de.') && f.endsWith('.vtt'));
       const enFile = files.find(f => f.includes('.en.') && f.endsWith('.vtt'));
 
-      // Only reject if yt-dlp errored AND no subtitle files were created
       if (err && !deFile && !enFile) {
         return reject(new Error(`yt-dlp failed: ${stderr?.substring(0, 200) || err.message}`));
       }
@@ -85,7 +83,6 @@ async function fetchVideoInfo(videoId) {
       if (err) {
         logger.error({ videoId, stderr: stderr?.substring(0, 300) }, 'yt-dlp info fetch failed');
 
-        // Check for common error patterns
         const errStr = stderr?.toLowerCase() || '';
         if (errStr.includes('private video') || errStr.includes('video unavailable') || errStr.includes('video is not available')) {
           return reject(new Error('VIDEO_UNAVAILABLE'));
@@ -111,4 +108,63 @@ async function fetchVideoInfo(videoId) {
   });
 }
 
-module.exports = { fetchSubtitles, fetchVideoInfo };
+/**
+ * Downloads the audio track of a YouTube video using yt-dlp.
+ * Tries to fetch native m4a stream to keep file size small and avoid ffmpeg.
+ */
+async function downloadAudio(videoId) {
+  const videoDir = path.join(config.CACHE_DIR, videoId);
+  if (!fs.existsSync(videoDir)) {
+    fs.mkdirSync(videoDir, { recursive: true });
+  }
+
+  const audioPath = path.join(videoDir, `${videoId}.audio.m4a`);
+  
+  if (fs.existsSync(audioPath)) {
+    return audioPath;
+  }
+
+  const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+  const args = [
+    '--js-runtimes', 'node',
+    '-f', 'worstaudio[ext=m4a]/worstaudio',
+    '--output', audioPath,
+    '--no-overwrites',
+    videoUrl,
+  ];
+
+  logger.info({ videoId, audioPath }, 'Running yt-dlp to download native audio stream');
+
+  return new Promise((resolve, reject) => {
+    execFile(config.YTDLP_PATH, args, {
+      timeout: config.YTDLP_TIMEOUT_MS * 3, 
+      maxBuffer: 1024 * 1024 * 20,
+    }, (err, stdout, stderr) => {
+      if (err) {
+        logger.error({ videoId, stderr: stderr?.substring(0, 500) }, 'yt-dlp audio download failed');
+        // Let it fall through, yt-dlp sometimes exits with error code on playlists/formats
+      }
+
+      if (fs.existsSync(audioPath)) {
+        logger.info({ videoId, size: fs.statSync(audioPath).size }, 'Audio download complete');
+        resolve(audioPath);
+      } else {
+        // Did it download as webm? (worstaudio fallback might not be m4a)
+        let files = [];
+        try { files = fs.readdirSync(videoDir); } catch (e) {}
+        const fallbackAudio = files.find(f => f.startsWith(`${videoId}.audio.`) && !f.endsWith('.vtt') && !f.endsWith('.json'));
+        
+        if (fallbackAudio) {
+           const finalPath = path.join(videoDir, fallbackAudio);
+           logger.info({ videoId, finalPath }, 'Audio downloaded to alternate format successfully');
+           resolve(finalPath);
+        } else {
+          reject(new Error(`yt-dlp failed to create any audio file. Stderr: ${stderr?.substring(0, 200)}`));
+        }
+      }
+    });
+  });
+}
+
+module.exports = { fetchSubtitles, fetchVideoInfo, downloadAudio };

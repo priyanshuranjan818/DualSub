@@ -1,0 +1,174 @@
+.dp {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+/* ── Section label ── */
+.dp__section-label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-sm);
+  padding: var(--sp-sm) var(--sp-md);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.dp__section-label--download {
+  margin-top: var(--sp-sm);
+}
+
+.dp__icon { color: var(--accent); font-size: 0.9rem; }
+
+/* ── Tabs ── */
+.dp__tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+
+.dp__tab {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  padding: var(--sp-sm) var(--sp-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-right: 1px solid var(--border);
+  transition: background var(--t-fast), color var(--t-fast);
+  text-transform: uppercase;
+}
+.dp__tab:last-child { border-right: none; }
+.dp__tab:hover { background: rgba(255,255,255,0.04); color: var(--text-secondary); }
+
+.dp__tab--active {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-bottom: 2px solid var(--accent);
+}
+
+.dp__tab-icon { font-size: 0.7rem; color: inherit; }
+
+/* ── Tab Body ── */
+.dp__body {
+  padding: var(--sp-sm) var(--sp-md);
+}
+
+.dp__setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-xs) 0;
+  gap: var(--sp-sm);
+}
+
+.dp__setting-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+/* ── Toggle ── */
+.dp__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-xs);
+}
+
+.dp__toggle-track {
+  width: 30px; height: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-full);
+  position: relative;
+  display: block;
+  transition: background var(--t-norm), border-color var(--t-norm);
+}
+.dp__toggle--on .dp__toggle-track {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+}
+
+.dp__toggle-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 10px; height: 10px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: transform var(--t-norm), background var(--t-norm);
+}
+.dp__toggle--on .dp__toggle-thumb {
+  transform: translateX(14px);
+  background: var(--accent);
+}
+
+.dp__toggle-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+.dp__toggle--on .dp__toggle-lbl { color: var(--accent); }
+
+/* ── Size buttons ── */
+.dp__size-btns { display: flex; gap: var(--sp-xs); }
+
+.dp__size-btn {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all var(--t-fast);
+}
+.dp__size-btn:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.dp__size-btn--active {
+  background: var(--accent-dim);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* ── Download buttons ── */
+.dp__dl-btns {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-xs);
+  padding: var(--sp-sm) var(--sp-md);
+}
+
+.dp__dl-btn {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: var(--sp-xs) var(--sp-sm);
+  text-align: center;
+  transition: all var(--t-fast);
+}
+.dp__dl-btn:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  background: var(--bg-card-hover);
+}
+.dp__dl-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.dp__dl-btn--both {
+  color: var(--accent);
+  border-color: var(--accent-border);
+  background: var(--accent-dim);
+}
+.dp__dl-btn--both:hover:not(:disabled) {
+  box-shadow: var(--glow-accent);
+}

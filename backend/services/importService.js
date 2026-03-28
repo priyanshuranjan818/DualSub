@@ -12,14 +12,17 @@ const logger = require('../utils/logger');
 /**
  * Main import pipeline — orchestrates subtitle extraction, parsing, translation, scoring, and caching.
  */
-async function importVideo(videoId) {
+async function importVideo(videoId, providedApiKey = null) {
   // ── 1. Check cache ──────────────────────────────────────────────────────
+  // cacheVersion 3: Replaced YouTube auto-captions with Groq Whisper transcription.
+  const CURRENT_CACHE_VERSION = 3;
   if (cacheService.exists(videoId)) {
     const meta = cacheService.readMeta(videoId);
-    if (meta) {
+    if (meta && (meta.cacheVersion || 1) >= CURRENT_CACHE_VERSION) {
       logger.info({ videoId }, 'Serving from cache');
       return { ...meta, cached: true, ready: true };
     }
+    logger.info({ videoId, cacheVersion: meta?.cacheVersion }, 'Cache stale — re-processing');
   }
 
   // ── 2. Fetch video info ─────────────────────────────────────────────────
@@ -33,59 +36,52 @@ async function importVideo(videoId) {
     throw new AppError(500, ERROR_CODES.EXTRACTION_FAILED, ERROR_MESSAGES[ERROR_CODES.EXTRACTION_FAILED]);
   }
 
-  // ── 3. Fetch subtitle files ─────────────────────────────────────────────
-  let subtitlePaths;
+  // ── 3. Download Audio for Transcription ─────────────────────────────────
+  let audioPath;
   try {
-    subtitlePaths = await ytdlpService.fetchSubtitles(videoId);
+    audioPath = await ytdlpService.downloadAudio(videoId);
   } catch (err) {
+    if (err.message === 'VIDEO_UNAVAILABLE') {
+      throw new AppError(422, ERROR_CODES.VIDEO_UNAVAILABLE, ERROR_MESSAGES[ERROR_CODES.VIDEO_UNAVAILABLE]);
+    }
     throw new AppError(500, ERROR_CODES.EXTRACTION_FAILED, ERROR_MESSAGES[ERROR_CODES.EXTRACTION_FAILED]);
   }
 
-  // ── 4. Parse German subtitles ───────────────────────────────────────────
+  // ── 4. Transcribe Audio (Groq Whisper) ──────────────────────────────────
   let deCues = [];
   let deSource = null;
 
-  if (subtitlePaths.deFilePath && fs.existsSync(subtitlePaths.deFilePath)) {
-    const stat = fs.statSync(subtitlePaths.deFilePath);
-    if (stat.size > config.MAX_VTT_SIZE_BYTES) {
-      throw new AppError(413, ERROR_CODES.PAYLOAD_TOO_LARGE, 'VTT file too large');
+  try {
+    const groqService = require('./groqService');
+    deCues = await groqService.transcribeAudio(audioPath, 'de', providedApiKey);
+    deSource = SOURCE_TYPES.GROQ_WHISPER;
+    
+    // Clean up audio file to save space
+    if (fs.existsSync(audioPath)) {
+      fs.unlinkSync(audioPath);
     }
-    const vttContent = fs.readFileSync(subtitlePaths.deFilePath, 'utf-8');
-    deCues = parseVTT(vttContent);
-    deSource = subtitlePaths.deFilePath.includes('.auto.') ? SOURCE_TYPES.YOUTUBE_AUTO : SOURCE_TYPES.YOUTUBE_AUTO;
+  } catch (err) {
+    logger.error({ error: err.message }, 'Groq transcription failed inside importService');
+    throw new AppError(500, ERROR_CODES.EXTRACTION_FAILED, 'Audio transcription failed. Ensure GROQ_API_KEY is valid.');
   }
 
   if (deCues.length === 0) {
     throw new AppError(422, ERROR_CODES.NO_SUBTITLES, ERROR_MESSAGES[ERROR_CODES.NO_SUBTITLES]);
   }
 
-  // ── 5. Parse or translate English subtitles ─────────────────────────────
+  // ── 5. Translate to English ──────────────────────────────────────────────
   let enCues = [];
   let enSource = null;
-  let translationRequired = false;
-
-  if (subtitlePaths.enFilePath && fs.existsSync(subtitlePaths.enFilePath)) {
-    const stat = fs.statSync(subtitlePaths.enFilePath);
-    if (stat.size <= config.MAX_VTT_SIZE_BYTES) {
-      const vttContent = fs.readFileSync(subtitlePaths.enFilePath, 'utf-8');
-      enCues = parseVTT(vttContent);
-      enSource = SOURCE_TYPES.YOUTUBE_AUTO;
+  let translationRequired = true; // We always translate from the transcribed audio now
+  try {
+    const translated = await translateCues(deCues);
+    if (translated && translated.length > 0) {
+      enCues = translated;
+      enSource = SOURCE_TYPES.TRANSLATED_DEEPL;
     }
-  }
-
-  if (enCues.length === 0) {
-    // Try DeepL translation
-    translationRequired = true;
-    try {
-      const translated = await translateCues(deCues);
-      if (translated && translated.length > 0) {
-        enCues = translated;
-        enSource = SOURCE_TYPES.TRANSLATED_DEEPL;
-      }
-    } catch (err) {
-      logger.warn({ videoId, error: err.message }, 'Translation failed, continuing with DE only');
-      enSource = null;
-    }
+  } catch (err) {
+    logger.warn({ videoId, error: err.message }, 'Translation failed, continuing with DE only');
+    enSource = null;
   }
 
   // ── 6. Compute scores ──────────────────────────────────────────────────
@@ -104,7 +100,7 @@ async function importVideo(videoId) {
     enSource,
     translationRequired,
     scores,
-    cacheVersion: 1,
+    cacheVersion: CURRENT_CACHE_VERSION,
   };
 
   cacheService.writeMeta(videoId, meta);

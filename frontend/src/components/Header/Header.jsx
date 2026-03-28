@@ -8,9 +8,9 @@ export default function Header({ onSettingsClick }) {
   return (
     <header className="header">
       <div className="header__inner container">
-        <button className="header__logo" onClick={resetVideo} title="DualSub Home">
+        <button className="header__logo" onClick={resetVideo} title="LearnWithHaxx Home">
           <span className="header__icon">🎬</span>
-          <span className="header__title">DualSub</span>
+          <span className="header__title">LearnWithHaxx</span>
           <span className="header__badge">BETA</span>
         </button>
 

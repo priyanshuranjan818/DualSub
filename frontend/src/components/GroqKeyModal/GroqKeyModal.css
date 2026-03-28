@@ -1,0 +1,93 @@
+.groq-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.groq-modal {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 2.5rem;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+}
+
+.groq-modal__title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.groq-modal__desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.groq-modal__form {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.groq-modal__link {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: opacity var(--t-fast);
+}
+
+.groq-modal__link:hover {
+  text-decoration: underline;
+  opacity: 0.9;
+}
+
+.groq-modal__input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 1rem;
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color var(--t-fast);
+}
+
+.groq-modal__input:focus {
+  border-color: var(--accent);
+}
+
+.groq-modal__btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 1rem;
+  border-radius: var(--r-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--t-fast);
+}
+
+.groq-modal__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.groq-modal__btn:not(:disabled):hover {
+  opacity: 0.9;
+}

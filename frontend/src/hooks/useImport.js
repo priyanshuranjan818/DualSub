@@ -6,13 +6,12 @@ import { validateYouTubeUrl } from '../utils/validateYouTubeUrl';
 export function useImport() {
   const {
     setVideoId, setVideoTitle, setVideoMeta,
-    setDeCues, setEnCues,
+    setSourceCues, setTransCues,
     setImportStatus, setErrorMessage,
-    resetVideo,
+    resetVideo, addToHistory,
   } = useAppContext();
 
-  const handleImport = useCallback(async (url) => {
-    // Frontend validation
+  const handleImport = useCallback(async (url, sourceLang = 'de', transLang = 'en') => {
     const validation = validateYouTubeUrl(url);
     if (!validation.valid) {
       setErrorMessage('Please enter a valid YouTube URL.');
@@ -20,32 +19,46 @@ export function useImport() {
       return;
     }
 
-    // Reset state
     resetVideo();
     setImportStatus('loading');
     setErrorMessage(null);
 
     try {
-      // 1. Import video
-      const meta = await apiImport(url);
+      // 1. Import video — backend extracts subtitles & metadata
+      const meta = await apiImport(url, sourceLang, transLang);
       setVideoId(meta.videoId);
       setVideoTitle(meta.title);
       setVideoMeta(meta);
 
       // 2. Fetch subtitle cues in parallel
-      const [de, en] = await Promise.all([
-        fetchSubtitles(meta.videoId, 'de'),
-        meta.hasEn ? fetchSubtitles(meta.videoId, 'en') : Promise.resolve([]),
+      const [src, trans] = await Promise.all([
+        fetchSubtitles(meta.videoId, sourceLang),
+        fetchSubtitles(meta.videoId, transLang),
       ]);
 
-      setDeCues(de);
-      setEnCues(en);
+      setSourceCues(src || []);
+      setTransCues(trans || []);
       setImportStatus('success');
+
+      // 3. Persist to history
+      addToHistory({
+        videoId: meta.videoId,
+        title: meta.title,
+        url,
+        sourceLang,
+        transLang,
+        addedAt: new Date().toISOString(),
+      });
     } catch (err) {
       setErrorMessage(err.message || 'Failed to import video. Please try again.');
       setImportStatus('error');
     }
-  }, [setVideoId, setVideoTitle, setVideoMeta, setDeCues, setEnCues, setImportStatus, setErrorMessage, resetVideo]);
+  }, [
+    setVideoId, setVideoTitle, setVideoMeta,
+    setSourceCues, setTransCues,
+    setImportStatus, setErrorMessage,
+    resetVideo, addToHistory,
+  ]);
 
   return { handleImport };
 }

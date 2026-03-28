@@ -16,9 +16,10 @@ router.post('/', async (req, res, next) => {
     }
 
     const videoId = validation.videoId;
+    const apiKey = req.headers['x-groq-api-key'];
 
     // Run import pipeline
-    const result = await importVideo(videoId);
+    const result = await importVideo(videoId, apiKey);
 
     res.json({
       videoId: result.videoId,

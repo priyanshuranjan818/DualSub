@@ -5,6 +5,7 @@ const config = {
   PORT: parseInt(process.env.PORT, 10) || 3001,
   CACHE_DIR: process.env.CACHE_DIR || path.join(__dirname, '..', 'cache'),
   DEEPL_KEY: process.env.DEEPL_KEY || '',
+  GROQ_API_KEY: process.env.GROQ_API_KEY || '',
   ALLOWED_ORIGIN: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 3600000,
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX, 10) || 10,

@@ -1,142 +1,79 @@
 /* ══════════════════════════════════════════════════════════════════════════════
-   DualSub — Premium Design System
+   DualSub — RemFluent Clone — Global Design System
    ══════════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Color Palette ─────────────────────────────────────────────────────── */
-  --color-bg-primary: #0a0a1a;
-  --color-bg-secondary: #111128;
-  --color-bg-card: #1a1a3e;
-  --color-bg-card-hover: #222255;
-  --color-bg-overlay: rgba(10, 10, 26, 0.85);
-  --color-bg-glass: rgba(26, 26, 62, 0.6);
+  /* ── Colors ─────────────────────────────────────────────────────────────── */
+  --bg-base:       #0a0a0a;
+  --bg-surface:    #111111;
+  --bg-card:       #181818;
+  --bg-card-hover: #1e1e1e;
+  --bg-active:     #1a0a10;
 
-  --color-text-primary: #e8e8f0;
-  --color-text-secondary: #a0a0c0;
-  --color-text-muted: #6a6a8e;
-  --color-text-accent: #6c63ff;
+  --text-primary:   #e8e8e8;
+  --text-secondary: #888888;
+  --text-muted:     #555555;
+  --text-accent:    #ff2d55;
+  --text-accent2:   #ff6680;
 
-  --color-accent-primary: #6c63ff;
-  --color-accent-primary-hover: #7b73ff;
-  --color-accent-secondary: #00d4aa;
-  --color-accent-gradient: linear-gradient(135deg, #6c63ff 0%, #00d4aa 100%);
+  --accent:        #ff2d55;
+  --accent-dim:    rgba(255,45,85,0.15);
+  --accent-border: rgba(255,45,85,0.4);
 
-  --color-german: #ffffff;
-  --color-english: #ffe680;
-  --color-subtitle-bg: rgba(0, 0, 0, 0.75);
+  --border:        rgba(255,255,255,0.07);
+  --border-hover:  rgba(255,255,255,0.14);
 
-  --color-success: #00d4aa;
-  --color-warning: #ffb347;
-  --color-error: #ff6b6b;
-  --color-info: #63b3ed;
+  --glow-accent:   0 0 20px rgba(255,45,85,0.25);
 
-  --color-border: rgba(108, 99, 255, 0.2);
-  --color-border-hover: rgba(108, 99, 255, 0.4);
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Courier New', Courier, monospace;
 
-  /* ── Typography ────────────────────────────────────────────────────────── */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
-  --font-size-4xl: 2.5rem;
+  /* ── Spacing ─────────────────────────────────────────────────────────────── */
+  --sp-xs: 0.25rem;
+  --sp-sm: 0.5rem;
+  --sp-md: 1rem;
+  --sp-lg: 1.5rem;
+  --sp-xl: 2rem;
+  --sp-2xl: 3rem;
 
-  /* ── Spacing ───────────────────────────────────────────────────────────── */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --spacing-3xl: 4rem;
+  /* ── Radius ──────────────────────────────────────────────────────────────── */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-full: 9999px;
 
-  /* ── Border Radius ─────────────────────────────────────────────────────── */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
-  --radius-full: 9999px;
+  /* ── Transitions ─────────────────────────────────────────────────────────── */
+  --t-fast: 120ms ease;
+  --t-norm: 220ms ease;
 
-  /* ── Shadows ───────────────────────────────────────────────────────────── */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(108, 99, 255, 0.3);
-
-  /* ── Transitions ───────────────────────────────────────────────────────── */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 400ms ease;
-
-  /* ── Subtitle Sizes ────────────────────────────────────────────────────── */
-  --subtitle-size-s: 0.9rem;
-  --subtitle-size-m: 1.2rem;
-  --subtitle-size-l: 1.6rem;
+  /* ── Subtitle Sizes ──────────────────────────────────────────────────────── */
+  --sub-s: 1rem;
+  --sub-m: 1.3rem;
+  --sub-l: 1.7rem;
 }
 
 /* ── Reset ──────────────────────────────────────────────────────────────────── */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html {
-  font-size: 16px;
-  scroll-behavior: smooth;
-}
+html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
-  font-family: var(--font-family);
-  background-color: var(--color-bg-primary);
-  color: var(--color-text-primary);
+  font-family: var(--font);
+  background: var(--bg-base);
+  color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* ── Background Pattern ──────────────────────────────────────────────────── */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-    radial-gradient(ellipse at 20% 20%, rgba(108, 99, 255, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(0, 212, 170, 0.06) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-#root {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-a {
-  color: var(--color-accent-primary);
-  text-decoration: none;
-  transition: color var(--transition-fast);
-}
-
-a:hover {
-  color: var(--color-accent-primary-hover);
-}
-
 button {
-  font-family: var(--font-family);
+  font-family: var(--font);
   cursor: pointer;
   border: none;
   background: none;
@@ -144,70 +81,38 @@ button {
   font-size: inherit;
 }
 
-input {
-  font-family: var(--font-family);
+input, select, textarea {
+  font-family: var(--font);
   font-size: inherit;
 }
 
-/* ── Utility Classes ─────────────────────────────────────────────────────── */
-.container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 var(--spacing-lg);
-  width: 100%;
-}
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--text-accent2); }
 
-.glass {
-  background: var(--color-bg-glass);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--color-border);
-}
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
-/* ── Animations ────────────────────────────────────────────────────────── */
+/* ── Animations ─────────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(255,45,85,0.3); }
+  50%       { box-shadow: 0 0 18px rgba(255,45,85,0.7); }
 }
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.4s ease forwards;
-}
-
-.animate-slide-down {
-  animation: slideDown 0.3s ease forwards;
-}
-
-/* ── Scrollbar ─────────────────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-bg-secondary);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-full);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-primary);
-}
+.animate-fade-in  { animation: fadeIn 0.35s ease forwards; }
+.animate-slide-down { animation: slideDown 0.25s ease forwards; }

@@ -1,38 +1,32 @@
 /**
- * SubtitleSyncEngine — Plain JS class that polls the YouTube player's current time
- * and uses binary search to find the active subtitle cue. Runs outside React render cycle.
+ * SubtitleSyncEngine — Polls YouTube player time, binary-searches for active
+ * subtitle cue, and reports the active index for transcript sidebar highlighting.
  */
 export class SubtitleSyncEngine {
   constructor(onUpdate) {
-    this.onUpdate = onUpdate;
+    this.onUpdate = onUpdate; // (srcCue, transCue, srcIdx) => void
     this.deCues = [];
     this.enCues = [];
     this.interval = null;
     this.getTime = null;
   }
 
-  setDeCues(cues) {
-    this.deCues = cues || [];
-  }
-
-  setEnCues(cues) {
-    this.enCues = cues || [];
-  }
-
-  setTimeGetter(fn) {
-    this.getTime = fn;
-  }
+  setDeCues(cues) { this.deCues = cues || []; }
+  setEnCues(cues) { this.enCues = cues || []; }
+  setTimeGetter(fn) { this.getTime = fn; }
 
   start() {
     this.stop();
     this.interval = setInterval(() => {
       if (!this.getTime) return;
       const t = this.getTime();
-      if (t === null || t === undefined) return;
-      const deCue = this.findCue(this.deCues, t);
-      const enCue = this.findCue(this.enCues, t);
-      this.onUpdate(deCue, enCue);
-    }, 250);
+      if (t == null) return;
+      const srcIdx  = this.findCueIndex(this.deCues, t);
+      const transIdx = this.findCueIndex(this.enCues, t);
+      const srcCue  = srcIdx  >= 0 ? this.deCues[srcIdx]  : null;
+      const transCue = transIdx >= 0 ? this.enCues[transIdx] : null;
+      this.onUpdate(srcCue, transCue, srcIdx);
+    }, 200);
   }
 
   stop() {
@@ -42,27 +36,22 @@ export class SubtitleSyncEngine {
     }
   }
 
-  /**
-   * Binary search for O(log n) performance on large subtitle files.
-   * Returns the cue containing the given time, or null if not in any cue range.
-   */
-  findCue(cues, time) {
-    if (!cues || cues.length === 0) return null;
-
-    let lo = 0;
-    let hi = cues.length - 1;
-
+  /** Binary search — returns index (-1 if not found). */
+  findCueIndex(cues, time) {
+    if (!cues || cues.length === 0) return -1;
+    let lo = 0, hi = cues.length - 1;
     while (lo <= hi) {
-      const mid = Math.floor((lo + hi) / 2);
-      if (cues[mid].end < time) {
-        lo = mid + 1;
-      } else if (cues[mid].start > time) {
-        hi = mid - 1;
-      } else {
-        return cues[mid];
-      }
+      const mid = (lo + hi) >> 1;
+      if (cues[mid].end < time)        lo = mid + 1;
+      else if (cues[mid].start > time) hi = mid - 1;
+      else return mid;
     }
+    return -1;
+  }
 
-    return null;
+  /** Backwards-compat helper used by useSubtitleSync freeze path. */
+  findCue(cues, time) {
+    const idx = this.findCueIndex(cues, time);
+    return idx >= 0 ? cues[idx] : null;
   }
 }
