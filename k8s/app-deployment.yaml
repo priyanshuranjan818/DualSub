@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: learnwithme-cache-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learnwithme-app
+  labels:
+    app: learnwithme-app
+spec:
+  replicas: 1  # Single replica required for ReadWriteOnce PVC
+  selector:
+    matchLabels:
+      app: learnwithme-app
+  template:
+    metadata:
+      labels:
+        app: learnwithme-app
+    spec:
+      containers:
+      - name: app
+        image: yourusername/learnwithme-app:latest
+        ports:
+        - containerPort: 3001
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3001"
+        - name: DEEPL_KEY
+          valueFrom:
+            secretKeyRef:
+              name: learnwithme-secrets
+              key: DEEPL_KEY
+              optional: true
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: learnwithme-secrets
+              key: GROQ_API_KEY
+              optional: true
+        volumeMounts:
+        - name: cache-storage
+          mountPath: /app/backend/cache
+        # Liveness probe: restart container if backend hangs
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          failureThreshold: 3
+        # Readiness probe: don't send traffic until app is up
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: cache-storage
+        persistentVolumeClaim:
+          claimName: learnwithme-cache-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: learnwithme-app-svc
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3001
+  selector:
+    app: learnwithme-app
+

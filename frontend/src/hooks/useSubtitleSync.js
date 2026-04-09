@@ -8,6 +8,7 @@ export function useSubtitleSync() {
     setActiveSourceCue, setActiveTransCue,
     setActiveSliceIdx,
     isPlaying, playerRef,
+    playerReady,
   } = useAppContext();
 
   const engineRef = useRef(null);
@@ -31,14 +32,16 @@ export function useSubtitleSync() {
   }, [sourceCues, transCues]);
 
   // Update time getter when player is ready
+  // FIX: use playerReady boolean (state) instead of playerRef.current (ref mutation)
+  // so this effect actually fires when the player initializes.
   useEffect(() => {
-    if (engineRef.current && playerRef.current) {
+    if (engineRef.current && playerReady && playerRef.current) {
       engineRef.current.setTimeGetter(() => {
         try { return playerRef.current.getCurrentTime?.() ?? 0; }
         catch { return 0; }
       });
     }
-  }, [playerRef.current]);
+  }, [playerReady]);
 
   // Start / stop based on play state
   useEffect(() => {
