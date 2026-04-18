@@ -30,8 +30,7 @@ Thumbs.db
 *logs.txt
 pino-pretty
 
-# Secrets and Local Overrides
-cookies.txt
+
 
 # Test
 coverage/
