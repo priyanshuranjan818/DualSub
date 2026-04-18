@@ -8,6 +8,7 @@ const healthRouter = require('./routes/health');
 const importRouter = require('./routes/import');
 const subtitlesRouter = require('./routes/subtitles');
 const metaRouter = require('./routes/meta');
+const videoRouter = require('./routes/video');
 const logger = require('./utils/logger');
 
 const app = express();
@@ -43,6 +44,7 @@ app.use('/health', healthRouter);
 app.use('/api/import', importLimiter, importRouter);
 app.use('/api/subtitles', subtitleLimiter, subtitlesRouter);
 app.use('/api/meta', subtitleLimiter, metaRouter);
+app.use('/api/video', subtitleLimiter, videoRouter);
 
 // ── Static Frontend Serving ───────────────────────────────────────────────────
 if (config.NODE_ENV === 'production') {

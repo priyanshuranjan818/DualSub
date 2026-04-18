@@ -10,9 +10,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      # IMPORTANT: If your frontend is accessed from a different origin than where it is hosted (e.g. not localhost:3001), update ALLOWED_ORIGIN.
-      # Since the frontend is served *by* the backend in the container, origin checks will match the port.
-      - ALLOWED_ORIGIN=http://localhost:3001,http://localhost:5173
+      # ALLOWED_ORIGIN is set automatically by setup-ec2.sh (or defaults to localhost)
+      - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-http://localhost:3001,http://localhost:5173}
+
       # Optionally add your DeepL API Key here for better translations:
       - DEEPL_KEY=your-deepl-api-key-here
     volumes:

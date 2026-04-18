@@ -178,4 +178,52 @@ async function downloadAudio(videoId) {
   });
 }
 
-module.exports = { fetchSubtitles, fetchVideoInfo, downloadAudio };
+/**
+ * Extracts a direct YouTube CDN stream URL using yt-dlp --get-url.
+ * No file is downloaded — just the URL string is returned.
+ * The caller can redirect the browser to this URL so the video is fetched
+ * directly by the user's browser (not the server), bypassing EC2 embed blocks.
+ */
+async function getVideoStreamUrl(videoId) {
+  const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+  // Prefer: best mp4 video+audio combined (browser-native playback, no muxing needed)
+  // Fallback chain: best single-file mp4 → best overall
+  const args = [
+    '--js-runtimes', 'node',
+    '--get-url',
+    '-f', 'best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
+    '--no-warnings',
+    '--ignore-no-formats-error',
+    videoUrl,
+  ];
+
+  const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+  if (fs.existsSync(cookiesPath)) { args.push('--cookies', cookiesPath); }
+
+  logger.info({ videoId }, 'Extracting direct stream URL via yt-dlp --get-url');
+
+  return new Promise((resolve, reject) => {
+    execFile(config.YTDLP_PATH, args, {
+      timeout: config.YTDLP_TIMEOUT_MS,
+      maxBuffer: 1024 * 1024 * 2,
+    }, (err, stdout, stderr) => {
+      if (err) {
+        logger.error({ videoId, stderr: stderr?.substring(0, 300) }, 'yt-dlp --get-url failed');
+        return reject(new Error(`Could not get stream URL: ${stderr?.substring(0, 200) || err.message}`));
+      }
+
+      // stdout may contain multiple URLs (video + audio) separated by newlines.
+      // We take the first valid URL (the video stream).
+      const urls = stdout.trim().split('\n').map(u => u.trim()).filter(u => u.startsWith('http'));
+      if (urls.length === 0) {
+        return reject(new Error('yt-dlp returned no stream URL'));
+      }
+
+      logger.info({ videoId }, 'Got direct stream URL');
+      resolve(urls[0]);
+    });
+  });
+}
+
+module.exports = { fetchSubtitles, fetchVideoInfo, downloadAudio, getVideoStreamUrl };

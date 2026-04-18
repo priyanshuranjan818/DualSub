@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
-import { useYouTubePlayer } from '../hooks/useYouTubePlayer';
+import { useVideoPlayer } from '../hooks/useVideoPlayer';
 import { useSubtitleSync } from '../hooks/useSubtitleSync';
 import TranscriptSidebar from '../components/TranscriptSidebar/TranscriptSidebar';
 import DisplayProtocols from '../components/DisplayProtocols/DisplayProtocols';
@@ -28,10 +28,13 @@ export default function PlayerPage() {
   };
 
   const onStateChange = (state) => {
+    // 1 = playing, 2 = paused, 0 = ended
     setIsPlaying(state === 1);
   };
 
-  useYouTubePlayer(videoId, 'yt-player-container', onPlayerReady, onStateChange);
+  // Native HTML5 video player — streams via backend /api/video/:id/stream (302 → YouTube CDN)
+  // Works on EC2 because the video bytes come from YouTube CDN to the user's browser, not EC2.
+  useVideoPlayer(videoId, 'video-player-container', onPlayerReady, onStateChange);
   useSubtitleSync();
 
   if (!videoId) return null;
@@ -54,8 +57,8 @@ export default function PlayerPage() {
         {/* LEFT: Video + subtitles */}
         <div className="player-left">
           <div className="player-wrap">
-            {/* YouTube embed */}
-            <div className="player-embed" id="yt-player-container" />
+            {/* Native HTML5 video player (replaces YouTube embed) */}
+            <div className="player-embed" id="video-player-container" />
 
             {/* Subtitle overlay */}
             {(showSource && activeSourceCue) || (showTrans && activeTransCue) ? (
@@ -90,3 +93,4 @@ export default function PlayerPage() {
     </div>
   );
 }
+
