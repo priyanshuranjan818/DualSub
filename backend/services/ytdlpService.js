@@ -30,6 +30,9 @@ async function fetchSubtitles(videoId) {
     videoUrl,
   ];
 
+  const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+  if (fs.existsSync(cookiesPath)) { args.push('--cookies', cookiesPath); }
+
   logger.info({ videoId }, 'Running yt-dlp to fetch subtitles');
 
   return new Promise((resolve, reject) => {
@@ -69,14 +72,19 @@ async function fetchVideoInfo(videoId) {
   const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
   return new Promise((resolve, reject) => {
-    execFile(config.YTDLP_PATH, [
+    const args = [
       '--js-runtimes', 'node',
       '--dump-json',
       '--skip-download',
       '--no-warnings',
       '--ignore-no-formats-error',
       videoUrl,
-    ], {
+    ];
+
+    const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+    if (fs.existsSync(cookiesPath)) { args.push('--cookies', cookiesPath); }
+
+    execFile(config.YTDLP_PATH, args, {
       timeout: config.YTDLP_TIMEOUT_MS,
       maxBuffer: 1024 * 1024 * 10,
     }, (err, stdout, stderr) => {
@@ -133,6 +141,9 @@ async function downloadAudio(videoId) {
     '--no-overwrites',
     videoUrl,
   ];
+
+  const cookiesPath = path.join(process.cwd(), 'cookies.txt');
+  if (fs.existsSync(cookiesPath)) { args.push('--cookies', cookiesPath); }
 
   logger.info({ videoId, audioPath }, 'Running yt-dlp to download native audio stream');
 

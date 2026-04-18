@@ -18,6 +18,8 @@ services:
     volumes:
       # Persist the cache directory so you don't redownload/translate video data on container restarts
       - dualsub-cache:/app/backend/cache
+      # Mount cookies.txt if it exists to fix YouTube blocking
+      - ./cookies.txt:/app/backend/cookies.txt
 
 volumes:
   dualsub-cache:

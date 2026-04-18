@@ -26,7 +26,12 @@ Thumbs.db
 
 # Logs
 *.log
+*log.txt
+*logs.txt
 pino-pretty
+
+# Secrets and Local Overrides
+cookies.txt
 
 # Test
 coverage/
