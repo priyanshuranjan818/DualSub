@@ -20,15 +20,44 @@ while [[ "$#" -gt 0 ]]; do
   shift
 done
 
+# ── Detect docker-compose command (v1 vs v2) ─────────────────────────────────
+if docker compose version &>/dev/null 2>&1; then
+  COMPOSE_CMD="docker compose"
+  echo "✅ Using Docker Compose V2 (docker compose)"
+elif command -v docker-compose &>/dev/null; then
+  COMPOSE_CMD="docker-compose"
+  echo "✅ Using Docker Compose V1 (docker-compose)"
+else
+  echo "❌ docker-compose not found. Install it:"
+  echo "   sudo apt-get install -y docker-compose"
+  exit 1
+fi
+
 # ── Auto-detect public IP ─────────────────────────────────────────────────────
 echo "🔍 Detecting public IP..."
 
-# Try EC2 metadata service first (works on AWS), fallback to external service
-PUBLIC_IP=$(curl -s --connect-timeout 3 http://169.254.169.254/latest/meta-data/public-ipv4 2>/dev/null \
-  || curl -s --connect-timeout 5 https://api.ipify.org \
-  || curl -s --connect-timeout 5 https://ifconfig.me \
-  || echo "")
+PUBLIC_IP=""
 
+# Try EC2 IMDSv2 (token-based — required on modern EC2 instances)
+TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" \
+  --connect-timeout 2 2>/dev/null || echo "")
+
+if [ -n "$TOKEN" ]; then
+  PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+    http://169.254.169.254/latest/meta-data/public-ipv4 \
+    --connect-timeout 2 2>/dev/null || echo "")
+fi
+
+# Fallback to external HTTP services
+if [ -z "$PUBLIC_IP" ]; then
+  PUBLIC_IP=$(curl -s --connect-timeout 5 https://ifconfig.me 2>/dev/null || echo "")
+fi
+if [ -z "$PUBLIC_IP" ]; then
+  PUBLIC_IP=$(curl -s --connect-timeout 5 https://api.ipify.org 2>/dev/null || echo "")
+fi
+
+# Manual fallback
 if [ -z "$PUBLIC_IP" ]; then
   echo "⚠️  Could not auto-detect public IP. Please enter it manually:"
   read -r PUBLIC_IP
@@ -36,7 +65,7 @@ fi
 
 echo "✅ Public IP: $PUBLIC_IP"
 
-# ── Write .env file for docker-compose substitution ──────────────────────────
+# ── Write .env file for docker-compose variable substitution ─────────────────
 ENV_FILE=".env"
 
 cat > "$ENV_FILE" <<EOF
@@ -44,10 +73,9 @@ cat > "$ENV_FILE" <<EOF
 # Re-run setup-ec2.sh to regenerate.
 
 ALLOWED_ORIGIN=http://${PUBLIC_IP}:3001,http://localhost:3001
-
 EOF
 
-# Append optional keys if provided
+# Append optional API keys if provided
 if [ -n "$GROQ_KEY" ]; then
   echo "GROQ_API_KEY=${GROQ_KEY}" >> "$ENV_FILE"
 fi
@@ -58,27 +86,21 @@ fi
 echo "✅ Written $ENV_FILE:"
 cat "$ENV_FILE"
 
-# ── Patch docker-compose.yml to inject optional keys as env vars ──────────────
-# (Only if keys were provided — avoids overwriting manually set values)
-if [ -n "$GROQ_KEY" ] && ! grep -q "GROQ_API_KEY" docker-compose.yml; then
-  sed -i "s|DEEPL_KEY=.*|DEEPL_KEY=${DEEPL_KEY:-your-deepl-api-key-here}\n      - GROQ_API_KEY=${GROQ_KEY}|" docker-compose.yml
-fi
-
-# ── Ensure Docker is running ──────────────────────────────────────────────────
+# ── Ensure Docker is installed ────────────────────────────────────────────────
 if ! command -v docker &>/dev/null; then
-  echo "❌ Docker not found. Install Docker first: https://docs.docker.com/engine/install/"
+  echo "❌ Docker not found. Install: https://docs.docker.com/engine/install/"
   exit 1
 fi
 
 # ── Stop any existing container ───────────────────────────────────────────────
 echo ""
 echo "🛑 Stopping existing container (if any)..."
-docker compose down --remove-orphans 2>/dev/null || true
+$COMPOSE_CMD down --remove-orphans 2>/dev/null || true
 
 # ── Build and start ───────────────────────────────────────────────────────────
 echo ""
 echo "🔨 Building and starting DualSub..."
-docker compose up -d --build
+$COMPOSE_CMD up -d --build
 
 # ── Done ─────────────────────────────────────────────────────────────────────
 echo ""
@@ -88,8 +110,8 @@ echo ""
 echo "   Local:   http://localhost:3001"
 echo "   Public:  http://${PUBLIC_IP}:3001"
 echo ""
-echo "   Make sure port 3001 is open in your EC2 Security Group."
+echo "   ⚠️  Make sure port 3001 is open in your EC2 Security Group."
 echo ""
 echo "   Logs:    docker logs dualsub-app -f"
-echo "   Stop:    docker compose down"
+echo "   Stop:    $COMPOSE_CMD down"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
