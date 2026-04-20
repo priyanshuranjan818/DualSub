@@ -5,6 +5,46 @@ const config = require('../config');
 const logger = require('../utils/logger');
 
 /**
+ * Builds the rotating proxy pool from environment variables.
+ *
+ * Priority:
+ *  1. YTDLP_PROXY_LIST — comma-separated list of proxy URLs (supports rotation).
+ *     e.g. http://user:pass@1.2.3.4:1000,http://user:pass@5.6.7.8:2000
+ *  2. YTDLP_PROXY — single proxy URL (legacy / simple setup).
+ *
+ * Returns an empty array if neither variable is set (proxy disabled).
+ */
+const _proxyPool = (() => {
+  if (config.YTDLP_PROXY_LIST) {
+    return config.YTDLP_PROXY_LIST
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p.startsWith('http') || p.startsWith('socks'));
+  }
+  if (config.YTDLP_PROXY) {
+    return [config.YTDLP_PROXY.trim()];
+  }
+  return [];
+})();
+
+if (_proxyPool.length > 0) {
+  logger.info({ count: _proxyPool.length }, `yt-dlp rotating proxy pool loaded`);
+}
+
+/**
+ * Randomly picks one proxy from the pool and returns the yt-dlp args for it.
+ * Returns [] when no proxies are configured (local dev / proxy disabled).
+ */
+function proxyArgs() {
+  if (_proxyPool.length === 0) return [];
+  const proxy = _proxyPool[Math.floor(Math.random() * _proxyPool.length)];
+  // Mask credentials in logs (show only host:port)
+  const masked = proxy.replace(/\/\/[^@]+@/, '//<credentials>@');
+  logger.debug({ proxy: masked }, 'yt-dlp using proxy');
+  return ['--proxy', proxy];
+}
+
+/**
  * Fetches subtitle VTT files for a YouTube video using yt-dlp.
  * Returns paths to the downloaded .vtt files.
  */
@@ -27,6 +67,7 @@ async function fetchSubtitles(videoId) {
     '--ignore-no-formats-error',
     '--output', outputTemplate,
     '--no-overwrites',
+    ...proxyArgs(),
     videoUrl,
   ];
 
@@ -78,6 +119,7 @@ async function fetchVideoInfo(videoId) {
       '--skip-download',
       '--no-warnings',
       '--ignore-no-formats-error',
+      ...proxyArgs(),
       videoUrl,
     ];
 
@@ -139,6 +181,7 @@ async function downloadAudio(videoId) {
     '-f', 'worstaudio[ext=m4a]/worstaudio',
     '--output', audioPath,
     '--no-overwrites',
+    ...proxyArgs(),
     videoUrl,
   ];
 
@@ -195,6 +238,7 @@ async function getVideoStreamUrl(videoId) {
     '-f', 'best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
     '--no-warnings',
     '--ignore-no-formats-error',
+    ...proxyArgs(),
     videoUrl,
   ];
 
